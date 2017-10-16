@@ -1,3 +1,4 @@
+require('./config/config');
 const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsvs } = require('./utils/csv-helper');
 const csvDirectory = `${__dirname}/csv/split-by-tnt`;
 

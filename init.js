@@ -8,9 +8,21 @@ const directories = [
 ];
 
 const configJson = {
-  'GOOGLE_API_KEY': '',
-  'LASERSHIP_API_ID': '',
-  'LASERSHIP_API_KEY': ''
+  'production': {
+    'GOOGLE_API_KEY': '',
+    'LASERSHIP_API_ID': '',
+    'LASERSHIP_API_KEY': ''
+  },
+  'development': {
+    'GOOGLE_API_KEY': '',
+    'LASERSHIP_API_ID': '',
+    'LASERSHIP_API_KEY': ''
+  },
+  'test': {
+    'GOOGLE_API_KEY': '',
+    'LASERSHIP_API_ID': '',
+    'LASERSHIP_API_KEY': ''
+  }
 };
 
 directories.forEach(directory => fs.ensureDirSync(directory));
