@@ -2,4 +2,3 @@ node_modules/
 csv/
 config.json
 submit-lasership-orders.js
-validate-addresses.js
