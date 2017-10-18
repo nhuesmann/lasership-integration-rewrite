@@ -68,19 +68,20 @@ function writeCsv (csvDirectory, csvName, csvString) {
 }
 
 /**
- * Archives the original CSVs that were split.
+ * Archives the original CSV that was split.
+ * @param  {string} csvName    The name of the CSV.
  * @param  {string} currentDir Source CSV directory.
  * @param  {string} archiveDir Target CSV archive directory.
  */
-function archiveCsvs (currentDir, archiveDir) {
-  let csvNames = getCsvNames(currentDir);
-  let csvs = csvNames.map(name => {
-    return {
-      src: `${currentDir}/${name}`,
-      destination: `${archiveDir}/${name}`
-    };
-  });
-  csvs.forEach(csv => fs.moveSync(csv.src, csv.destination));
+function archiveCsv (csvName, currentDir, archiveDir) {
+  let archivedCsvs = getCsvNames(archiveDir);
+  if (archivedCsvs.indexOf(csvName) === -1) {
+    let src = `${currentDir}/${csvName}`;
+    let destination = `${archiveDir}/${csvName}`;
+    fs.move(src, destination);
+  } else {
+    fs.remove(`${currentDir}/${csvName}`);
+  }
 }
 
 /**
@@ -90,7 +91,7 @@ function archiveCsvs (currentDir, archiveDir) {
  */
 function validateHeaders (headers) {
   return headers.map(function(header) {
-    return header.replace(/\W/g, " ").replace(/\s+/g, "_").toUpperCase();
+    return header.replace(/\W/g, ' ').replace(/\s+/g, '_').replace(/_$/g, '').toLowerCase();
   });
 };
 
@@ -100,5 +101,5 @@ module.exports = {
   parseCsv,
   stringifyCsv,
   writeCsv,
-  archiveCsvs
+  archiveCsv
 };

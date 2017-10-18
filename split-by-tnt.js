@@ -1,10 +1,9 @@
 require('./config/config');
-const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsvs } = require('./utils/csv-helper');
+const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsv } = require('./utils/csv-helper');
 const csvDirectory = `${__dirname}/csv/split-by-tnt`;
 
 const csvs = getCsvNames(csvDirectory);
 csvs.forEach(csv => main(csv));
-archiveCsvs(csvDirectory, `${csvDirectory}/archive`);
 
 async function main (csvName) {
   try {
@@ -15,10 +14,13 @@ async function main (csvName) {
     for (var tnt in tntObject) {
       if (tntObject.hasOwnProperty(tnt)) {
         let csvString = await stringifyCsv(tntObject[tnt]);
-        let newName = csvName.replace('.csv', `_Lasership_${tnt.replace('TNT', '')}Day.csv`);
+        let newName = csvName.replace('.csv', `_Lasership_${tnt.replace('tnt', '')}Day.csv`);
         await writeCsv(`${csvDirectory}/split-csvs`, newName, csvString);
       }
     }
+
+    await archiveCsv(csvName, csvDirectory, `${csvDirectory}/archive`);
+
   } catch (e) {
     console.log(e);
   }
@@ -26,10 +28,10 @@ async function main (csvName) {
 
 function splitByTnt (orders) {
   return orders.reduce((prev, curr) => {
-    curr.TNT = parseInt(curr.TNT);
-    prev[`TNT${curr.TNT}`]
-      ? prev[`TNT${curr.TNT}`].push(curr)
-      : prev[`TNT${curr.TNT}`] = [curr];
+    curr.tnt = parseInt(curr.tnt);
+    prev[`tnt${curr.tnt}`]
+      ? prev[`tnt${curr.tnt}`].push(curr)
+      : prev[`tnt${curr.tnt}`] = [curr];
     return prev;
   }, {});
 }
