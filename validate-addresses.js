@@ -14,6 +14,8 @@ const googleMapsClient = require('@google/maps').createClient({
   }
 });
 
+// TODO: add logging to everything!!
+
 const csvs = getCsvNames(csvDirectory);
 main(csvs); // TODO: rename this function!
 
@@ -25,7 +27,7 @@ async function main (csvNames) {
 
       orders = orders.map(order => {
         let randInterval = Math.floor((Math.random() * 300) + 1);
-        return setTimeoutPromise(randInterval, geocodeAndValidate(order));
+        return setTimeoutPromise(randInterval, validateAddressAndGetOffset(order));
       });
 
       orders = await Promise.all(orders);
@@ -45,7 +47,7 @@ async function main (csvNames) {
   }
 }
 
-async function geocodeAndValidate (order) {
+async function validateAddressAndGetOffset (order) {
   const address = order.address_2 ? `${order.address_1} ${order.address_2}` : order.address_1;
 
   try {
@@ -54,7 +56,7 @@ async function geocodeAndValidate (order) {
     }).asPromise();
 
     if (res.json.status !== 'OK') {
-      order.error = res.json.status;
+      order.error = `Geocode: ${res.json.status}`;
       if (res.json.error_message) {
         order.error_detail = res.json.error_message;
       }
@@ -76,11 +78,45 @@ async function geocodeAndValidate (order) {
       order.city = address.locality || address.sublocality;
       order.state = address.administrative_area_level_1;
       order.country = address.country;
-      delete order.error;
-      delete order.error_detail;
+
+      try {
+        let res = await googleMapsClient.timezone({
+          location: [order.geo_lat, order.geo_lng],
+          timestamp: Math.floor(new Date() / 1000)
+        }).asPromise();
+
+        if (res.json.status !== 'OK') {
+          order.error = `Timezone: ${res.json.status}`;
+          if (res.json.error_message) {
+            order.error_detail = res.json.error_message;
+          }
+        } else {
+          // Calculate the offset in hours, accounting for Daylight Savings
+          let dstOffset = res.json.dstOffset;
+          let rawOffset = res.json.rawOffset;
+          let offset = (dstOffset + rawOffset)/3600;
+
+          // Convert offset to string, formatted for moment.js
+          let negative;
+          if (offset < 0) {
+            negative = true;
+            offset = (offset * -1);
+          }
+          offset = offset < 10 ? `0${offset}:00` : `${offset}:00`;
+          offset = negative ? `-${offset}` : offset;
+
+          order.offset = offset;
+          delete order.geo_lat;
+          delete order.geo_lng;
+          delete order.error;
+          delete order.error_detail;
+        }
+      } catch (e) {
+        order.error = `Timezone: ${e}`;
+      }
     }
   } catch (e) {
-    order.error = e;
+    order.error = `Geocode: ${e}`;
   }
 
   return order;
