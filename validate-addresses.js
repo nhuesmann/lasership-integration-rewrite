@@ -15,7 +15,7 @@ const googleMapsClient = require('@google/maps').createClient({
   }
 });
 
-// TODO: add logging to everything!!
+// TODO: add logging and docblockr to everything!!
 
 const csvs = getCsvNames(csvDirectory);
 main(csvs); // TODO: rename this function!
