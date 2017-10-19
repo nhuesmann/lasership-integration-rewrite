@@ -2,6 +2,7 @@ require('./config/config');
 const util = require('util');
 const setTimeoutPromise = util.promisify(setTimeout);
 
+const { validateOrder } = require('./utils/order-validator');
 const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsv } = require('./utils/csv-helper');
 const csvDirectory = `${__dirname}/csv/validate-addresses`;
 
@@ -25,7 +26,7 @@ async function main (csvNames) {
       const buffer = await getCsvData(csvDirectory, csvName);
       let orders = parseCsv(buffer);
 
-      orders = orders.map(order => {
+      orders = orders.map(order => validateOrder(order)).map(order => {
         let randInterval = Math.floor((Math.random() * 300) + 1);
         return setTimeoutPromise(randInterval, validateAddressAndGetOffset(order));
       });
@@ -48,6 +49,8 @@ async function main (csvNames) {
 }
 
 async function validateAddressAndGetOffset (order) {
+  if (order.error) return order;
+
   const address = order.address_2 ? `${order.address_1} ${order.address_2}` : order.address_1;
 
   try {
@@ -100,7 +103,7 @@ async function validateAddressAndGetOffset (order) {
           let negative;
           if (offset < 0) {
             negative = true;
-            offset = (offset * -1);
+            offset *= -1;
           }
           offset = offset < 10 ? `0${offset}:00` : `${offset}:00`;
           offset = negative ? `-${offset}` : offset;
@@ -108,8 +111,6 @@ async function validateAddressAndGetOffset (order) {
           order.offset = offset;
           delete order.geo_lat;
           delete order.geo_lng;
-          delete order.error;
-          delete order.error_detail;
         }
       } catch (e) {
         order.error = `Timezone: ${e}`;
