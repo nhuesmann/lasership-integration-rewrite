@@ -2,9 +2,18 @@ const fs = require('fs-extra');
 const jsonfile = require('jsonfile');
 
 const directories = [
+  `${__dirname}/config`,
   `${__dirname}/csv/split-by-tnt/archive`,
   `${__dirname}/csv/split-by-tnt/split-csvs`,
-  `${__dirname}/config`
+  `${__dirname}/csv/submit-lasership-orders/archive`,
+  `${__dirname}/csv/submit-lasership-orders/failed-orders`,
+  `${__dirname}/csv/submit-lasership-orders/tracking_numbers`,
+  `${__dirname}/csv/validate-addresses/archive`,
+  `${__dirname}/csv/validate-addresses/failed`,
+  `${__dirname}/csv/validate-addresses/validated`,
+  `${__dirname}/pdf/archive`,
+  `${__dirname}/pdf/merged-labels`,
+  `${__dirname}/pdf/temp`
 ];
 
 const configJson = {
@@ -27,5 +36,3 @@ const configJson = {
 
 directories.forEach(directory => fs.ensureDirSync(directory));
 jsonfile.writeFileSync(`${__dirname}/config/config.json`, configJson, {spaces: 2});
-
-// TODO: add all pdf directories!!
