@@ -85,6 +85,27 @@ function archiveCsv (csvName, currentDir, archiveDir) {
 }
 
 /**
+ * Creates a CSV containing tracking numbers for all orders.
+ * @param  {array} labelsWithTracking The array of order/label/tracking objects.
+ * @param  {string} csvName           The name of the CSV.
+ * @param  {string} csvDirectory      The path of the CSV directory.
+ * @return {Promise}                  Resolves if write stringify and write
+ * operations are successful, rejects an error.
+ */
+function trackingCsv (labelsWithTracking, csvName, csvDirectory) {
+  let orders = labelsWithTracking.map(order => {
+    return {
+      order: order.order,
+      tracking_number: order.tracking
+    };
+  });
+
+  return stringifyCsv(orders).then((csvString) => {
+    return writeCsv(csvDirectory, csvName, csvString);
+  });
+}
+
+/**
  * Converts CSV headers into valid strings usable as object properties.
  * @param  {array} headers Original column headers.
  * @return {array} Renamed column headers.
@@ -101,5 +122,6 @@ module.exports = {
   parseCsv,
   stringifyCsv,
   writeCsv,
-  archiveCsv
+  archiveCsv,
+  trackingCsv
 };

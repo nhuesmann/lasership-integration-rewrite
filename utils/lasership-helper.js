@@ -37,8 +37,6 @@ function localDeliveryDate (order, datetime) {
   return moment.utc(datetime.replace('Z', order.offset)).add(order.tnt, 'days').format();
 }
 
-////////////////// TODO: check that the references look good! //////////////////
-
 /**
  * Constructor function for creating Lasership order JSON.
  * @param       {object} order The order object.
@@ -124,6 +122,12 @@ function LasershipOrder (order) {
   }];
 }
 
+/**
+ * Submits an order to Lasership API.
+ * @param  {object} order The Lasership JSON order object.
+ * @return {Promise}      Resolves with response data from a successful response
+ * or rejects with response data from an erroneous response.
+ */
 function submitOrder (order) {
   order = new LasershipOrder(order);
   let endpoint = `https://api.lasership.com/Method/PlaceOrder/json/${apiId}/${apiKey}/${testFlag}/1/DN4x6`;

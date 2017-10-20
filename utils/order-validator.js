@@ -28,6 +28,12 @@ const validate = {
   }
 };
 
+/**
+ * Checks that all required properties are present and perfoms additional data
+ * cleansing on a subset of those properties.
+ * @param  {object} order The order object.
+ * @return {object}       The validated and cleansed order object.
+ */
 function validateOrder (order) {
   delete order.error;
   delete order.error_detail;

@@ -15,12 +15,12 @@ const googleMapsClient = require('@google/maps').createClient({
   }
 });
 
-// TODO: add logging and docblockr to everything!!
+// TODO: add logging to everything!!
 
 const csvs = getCsvNames(csvDirectory);
-main(csvs); // TODO: rename this function!
+validateAddresses(csvs);
 
-async function main (csvNames) {
+async function validateAddresses (csvNames) {
   for (let csvName of csvNames) {
     try {
       const buffer = await getCsvData(csvDirectory, csvName);
@@ -48,6 +48,12 @@ async function main (csvNames) {
   }
 }
 
+/**
+ * Validates address using Google Geocode API and gets the timezone offset and
+ * Google formatted address string.
+ * @param {object} order The order object.
+ * @return {object}      The modified order object.
+ */
 async function validateAddressAndGetOffset (order) {
   if (order.error) return order;
 
@@ -94,12 +100,10 @@ async function validateAddressAndGetOffset (order) {
             order.error_detail = res.json.error_message;
           }
         } else {
-          // Calculate the offset in hours, accounting for Daylight Savings
           let dstOffset = res.json.dstOffset;
           let rawOffset = res.json.rawOffset;
           let offset = (dstOffset + rawOffset)/3600;
 
-          // Convert offset to string, formatted for moment.js
           let negative;
           if (offset < 0) {
             negative = true;
@@ -123,6 +127,12 @@ async function validateAddressAndGetOffset (order) {
   return order;
 }
 
+/**
+ * Creates or updates CSVs for orders that passed and failed address validation, respectively.
+ * @param  {string} csvName         The name of the CSV.
+ * @param  {array} validatedOrders Array of orders that passed address validation.
+ * @param  {array} failedOrders    Array of orders that failed address validation.
+ */
 async function createOrUpdateCsvs (csvName, validatedOrders, failedOrders) {
   const validatedDir = `${csvDirectory}/validated`;
   const validated = getCsvNames(validatedDir);

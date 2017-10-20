@@ -3,13 +3,13 @@ const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsv } 
 const csvDirectory = `${__dirname}/csv/split-by-tnt`;
 
 const csvs = getCsvNames(csvDirectory);
-csvs.forEach(csv => main(csv));
+csvs.forEach(csv => splitByTnt(csv));
 
-async function main (csvName) {
+async function splitByTnt (csvName) {
   try {
     const buffer = await getCsvData(csvDirectory, csvName);
     const orders = parseCsv(buffer);
-    const tntObject = splitByTnt(orders);
+    const tntObject = filterOrders(orders);
 
     for (var tnt in tntObject) {
       if (tntObject.hasOwnProperty(tnt)) {
@@ -26,7 +26,7 @@ async function main (csvName) {
   }
 }
 
-function splitByTnt (orders) {
+function filterOrders (orders) {
   return orders.reduce((prev, curr) => {
     curr.tnt = parseInt(curr.tnt);
     prev[`tnt${curr.tnt}`]
