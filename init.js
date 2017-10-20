@@ -27,3 +27,5 @@ const configJson = {
 
 directories.forEach(directory => fs.ensureDirSync(directory));
 jsonfile.writeFileSync(`${__dirname}/config/config.json`, configJson, {spaces: 2});
+
+// TODO: add all pdf directories!!

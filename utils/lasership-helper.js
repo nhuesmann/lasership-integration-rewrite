@@ -34,7 +34,7 @@ function lasershipTimes (order) {
  * @return {string}          The delivery date string.
  */
 function localDeliveryDate (order, datetime) {
-  return moment.utc(`${datetime.replace('Z', '')}${order.offset}`).add(order.tnt, 'days').format();
+  return moment.utc(datetime.replace('Z', order.offset)).add(order.tnt, 'days').format();
 }
 
 ////////////////// TODO: check that the references look good! //////////////////
@@ -45,7 +45,7 @@ function localDeliveryDate (order, datetime) {
  * @constructor
  */
 function LasershipOrder (order) {
-  let lsTimes = LasershipTimes(order);
+  let lsTimes = lasershipTimes(order);
 
   this.CustomerBranch = "CFDBRKLN";
   this.CustomerOrderNumber = order.sales_order;
@@ -55,7 +55,7 @@ function LasershipOrder (order) {
     Phone: "3105311935",
     Email: "tech@chefd.com"
   };
-  this.Reference1 = `${order.reference} - ${order.sales_order}`;
+  this.Reference1 = `${order.reference}: ${order.sales_order}`;
   this.Reference2 = `SHIP DATE: ${order.ship_date}`;
   this.ServiceCode = "RD";
   this.PickupType = "LaserShip";

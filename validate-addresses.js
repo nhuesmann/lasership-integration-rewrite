@@ -28,7 +28,7 @@ async function main (csvNames) {
 
       orders = orders.map(order => validateOrder(order)).map(order => {
         let randInterval = Math.floor((Math.random() * 300) + 1);
-        return setTimeoutPromise(randInterval, validateAddressAndGetOffset(order));
+        return setTimeoutPromise(randInterval, order).then((order) => validateAddressAndGetOffset(order));
       });
 
       orders = await Promise.all(orders);
@@ -133,12 +133,15 @@ async function createOrUpdateCsvs (csvName, validatedOrders, failedOrders) {
     validatedOrders = priorValidOrders.concat(validatedOrders);
   }
 
-  validatedOrders.sort((a, b) => a.sales_order - b.sales_order);
-  failedOrders.sort((a, b) => a.sales_order - b.sales_order);
+  if (validatedOrders.length > 0) {
+    validatedOrders.sort((a, b) => a.sales_order - b.sales_order);
+    let validatedCsvString = await stringifyCsv(validatedOrders);
+    await writeCsv(`${csvDirectory}/validated`, `${csvName}`, validatedCsvString);
+  }
 
-  let validatedCsvString = await stringifyCsv(validatedOrders);
-  let failedCsvString = await stringifyCsv(failedOrders);
-
-  await writeCsv(`${csvDirectory}/validated`, `${csvName}`, validatedCsvString);
-  await writeCsv(`${csvDirectory}/failed`, `${csvName}`, failedCsvString);
+  if (failedOrders.length > 0) {
+    failedOrders.sort((a, b) => a.sales_order - b.sales_order);
+    let failedCsvString = await stringifyCsv(failedOrders);
+    await writeCsv(`${csvDirectory}/failed`, `${csvName}`, failedCsvString);
+  }
 }

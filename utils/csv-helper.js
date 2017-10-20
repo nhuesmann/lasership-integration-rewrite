@@ -90,7 +90,7 @@ function archiveCsv (csvName, currentDir, archiveDir) {
  * @return {array} Renamed column headers.
  */
 function validateHeaders (headers) {
-  return headers.map(function(header) {
+  return headers.map(header => {
     return header.replace(/\W/g, ' ').replace(/\s+/g, '_').replace(/_$/g, '').toLowerCase();
   });
 };
