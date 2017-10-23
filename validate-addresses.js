@@ -4,6 +4,9 @@ const setTimeoutPromise = util.promisify(setTimeout);
 
 const { validateOrder } = require('./utils/order-validator');
 const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsv } = require('./utils/csv-helper');
+const { log } = require('./utils/log');
+
+const caller = 'validate-addresses';
 const csvDirectory = `${__dirname}/csv/validate-addresses`;
 
 const googleMapsClient = require('@google/maps').createClient({
@@ -14,8 +17,6 @@ const googleMapsClient = require('@google/maps').createClient({
     period: 1000
   }
 });
-
-// TODO: add logging to everything!!
 
 const csvs = getCsvNames(csvDirectory);
 validateAddresses(csvs);
@@ -36,14 +37,17 @@ async function validateAddresses (csvNames) {
       let validatedOrders = orders.filter(order => !order.error);
       let failedOrders = orders.filter(order => order.error);
 
-      let log = `${csvName}: \n- ${validatedOrders.length} addresses validated successfully. \n- ${failedOrders.length} addresses failed validation.`;
-      console.log(log);
+      let message = `${csvName} \n- ${validatedOrders.length} addresses validated successfully. \n- ${failedOrders.length} addresses failed validation.`;
+      log(caller, message);
 
       await createOrUpdateCsvs(csvName, validatedOrders, failedOrders);
       await archiveCsv(csvName, csvDirectory, `${csvDirectory}/archive`);
 
+      message = `${csvName} finished validation.`;
+      log(caller, message);
+
     } catch (e) {
-      console.log(e);
+      log(caller, e);
     }
   }
 }
@@ -137,21 +141,25 @@ async function createOrUpdateCsvs (csvName, validatedOrders, failedOrders) {
   const validatedDir = `${csvDirectory}/validated`;
   const validated = getCsvNames(validatedDir);
 
-  if (validated.indexOf(csvName) > -1) {
-    const buffer = await getCsvData(validatedDir, csvName);
-    let priorValidOrders = parseCsv(buffer);
-    validatedOrders = priorValidOrders.concat(validatedOrders);
-  }
+  try {
+    if (validated.indexOf(csvName) > -1) {
+      const buffer = await getCsvData(validatedDir, csvName);
+      let priorValidOrders = parseCsv(buffer);
+      validatedOrders = priorValidOrders.concat(validatedOrders);
+    }
 
-  if (validatedOrders.length > 0) {
-    validatedOrders.sort((a, b) => a.sales_order - b.sales_order);
-    let validatedCsvString = await stringifyCsv(validatedOrders);
-    await writeCsv(`${csvDirectory}/validated`, `${csvName}`, validatedCsvString);
-  }
+    if (validatedOrders.length > 0) {
+      validatedOrders.sort((a, b) => a.sales_order - b.sales_order);
+      let validatedCsvString = await stringifyCsv(validatedOrders);
+      await writeCsv(`${csvDirectory}/validated`, `${csvName}`, validatedCsvString);
+    }
 
-  if (failedOrders.length > 0) {
-    failedOrders.sort((a, b) => a.sales_order - b.sales_order);
-    let failedCsvString = await stringifyCsv(failedOrders);
-    await writeCsv(`${csvDirectory}/failed`, `${csvName}`, failedCsvString);
+    if (failedOrders.length > 0) {
+      failedOrders.sort((a, b) => a.sales_order - b.sales_order);
+      let failedCsvString = await stringifyCsv(failedOrders);
+      await writeCsv(`${csvDirectory}/failed`, `${csvName}`, failedCsvString);
+    }
+  } catch (e) {
+    log(caller, e);
   }
 }

@@ -1,5 +1,8 @@
 require('./config/config');
 const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsv } = require('./utils/csv-helper');
+const { log } = require('./utils/log');
+
+const caller = 'split-by-tnt';
 const csvDirectory = `${__dirname}/csv/split-by-tnt`;
 
 const csvs = getCsvNames(csvDirectory);
@@ -21,8 +24,11 @@ async function splitByTnt (csvName) {
 
     await archiveCsv(csvName, csvDirectory, `${csvDirectory}/archive`);
 
+    let message = `${csvName} split successfully.`;
+    log(caller, message);
+
   } catch (e) {
-    console.log(e);
+    log(caller, e);
   }
 }
 

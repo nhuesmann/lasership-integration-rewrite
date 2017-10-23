@@ -5,6 +5,9 @@ const setTimeoutPromise = util.promisify(setTimeout);
 const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsv, trackingCsv } = require('./utils/csv-helper');
 const { submitOrder } = require('./utils/lasership-helper');
 const { saveLabelAndTracking, mergeLabels, archiveLabels } = require('./utils/label-helper');
+const { log } = require('./utils/log');
+
+const caller = 'submit-lasership-orders';
 const csvDirectory = `${__dirname}/csv/submit-lasership-orders`;
 
 const csvs = getCsvNames(csvDirectory);
@@ -29,7 +32,8 @@ async function submitLasershipOrders (csvNames) {
       let failedOrders = responses.filter(res => res.error);
       let successfulOrders = responses.filter(res => !res.error);
 
-      // TODO: log the successes and failures. Add comprehensive logging
+      let message = `${csvName} \n- ${successfulOrders.length} orders successfully placed. \n- ${failedOrders.length} orders failed.`;
+      log(caller, message);
 
       let labelsWithTracking = await Promise.all(successfulOrders.map(res => {
         return saveLabelAndTracking(res, csvName);
@@ -44,10 +48,8 @@ async function submitLasershipOrders (csvNames) {
         let failedCsvString = await stringifyCsv(failedOrders);
         await writeCsv(`${csvDirectory}/failed`, `${csvName}`, failedCsvString);
       }
-
-      // TODO: for all scripts, make sure the catch of the main function LOGS the error and handles it somehow!
     } catch (e) {
-      console.log(e);
+      log(caller, e);
     }
   }
 }

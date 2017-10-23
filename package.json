@@ -4,7 +4,12 @@
   "description": "",
   "main": "split-by-tnt.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "init": "node init.js",
+    "split-by-tnt": "node split-by-tnt.js",
+    "validate-addresses": "node validate-addresses.js",
+    "submit-staging-orders": "node submit-lasership-orders.js --staging",
+    "submit-production-orders": "node submit-lasership-orders.js --production"
   },
   "keywords": [],
   "author": "",

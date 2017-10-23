@@ -1,10 +1,10 @@
 const moment = require('moment');
 const request = require('request-promise');
-const argv = require('yargs').alias('test', 't').alias('production', 'p').argv;
+const argv = require('yargs').alias('staging', 's').alias('production', 'p').argv;
 
 const apiId = process.env.LASERSHIP_API_ID;
 const apiKey = process.env.LASERSHIP_API_KEY;
-const testFlag = argv.t ? 1 : argv.p ? 0 : 1;
+const testFlag = argv.s ? 1 : argv.p ? 0 : 1;
 
 /**
  * Enum of key Lasership times (Critical Pull Time (CPT) and CPT +/- 1 hour).
