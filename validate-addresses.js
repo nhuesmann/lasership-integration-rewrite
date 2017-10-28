@@ -82,13 +82,20 @@ async function validateAddressAndGetOffset (order) {
         return prev;
       }, {});
 
+      address = validateAddressComponents(address);
+
+      if (address.invalid) {
+        order.error = `Geocode: invalid ${address.invalid}`;
+        return order;
+      }
+
       order.validated_address = res.json.results[0].formatted_address;
       order.geo_lat = res.json.results[0].geometry.location.lat;
       order.geo_lng = res.json.results[0].geometry.location.lng;
       order.address_1 = `${address.street_number} ${address.route}`;
       order.address_2 = address.subpremise || '';
       order.postal_code = address.postal_code;
-      order.city = address.locality || address.sublocality;
+      order.city = address.locality || address.sublocality || address.neighborhood || address.administrative_area_level_3;
       order.state = address.administrative_area_level_1;
       order.country = address.country;
 
@@ -162,4 +169,25 @@ async function createOrUpdateCsvs (csvName, validatedOrders, failedOrders) {
   } catch (e) {
     log(caller, e);
   }
+}
+
+function validateAddressComponents (address) {
+  let invalid;
+  let requiredAddressComponents = ['street_number', 'route', 'postal_code', 'administrative_area_level_1', 'country'];
+
+  requiredAddressComponents.forEach(property => {
+    if (!address.hasOwnProperty(property)) {
+      invalid = property;
+    }
+  });
+
+  if (!address.locality && !address.sublocality && !address.neighborhood && !address.administrative_area_level_3) {
+    invalid = 'city';
+  }
+
+  if (invalid) {
+    address.invalid = invalid;
+  }
+
+  return address;
 }
