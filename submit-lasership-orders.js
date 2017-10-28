@@ -1,6 +1,6 @@
 require('./config/config');
-const util = require('util');
-const setTimeoutPromise = util.promisify(setTimeout);
+const Bottleneck = require("bottleneck");
+const limiter = new Bottleneck(40);
 
 const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsv, trackingCsv } = require('./utils/csv-helper');
 const { submitOrder } = require('./utils/lasership-helper');
@@ -19,13 +19,25 @@ async function submitLasershipOrders (csvNames) {
       const buffer = await getCsvData(csvDirectory, csvName);
       let orders = parseCsv(buffer);
 
+      // TODO: fix error if PDF already exists (archive if exists)
+      // TODO: fix path error from terminal and failing csv creation
+
       orders = orders.map(order => {
-        let randInterval = Math.floor((Math.random() * 300) + 1);
-        return setTimeoutPromise(randInterval, order).then((order) => submitOrder(order))
-          .catch(e => {
-            order.error = JSON.parse(e.error).ErrorMessage;
-            return order;
-          });
+        return limiter.schedule(submitOrder, order).catch(e => {
+          let error;
+          if (e.error.constructor === String) {
+            try {
+              error = JSON.parse(e.error).ErrorMessage;
+            } catch(e) {
+              error = error.message;
+            }
+          } else {
+            error = error.message;
+          }
+
+          order.error = error;
+          return order;
+        });
       });
 
       let responses = await Promise.all(orders);
@@ -35,13 +47,16 @@ async function submitLasershipOrders (csvNames) {
       let message = `${csvName} \n- ${successfulOrders.length} orders successfully placed. \n- ${failedOrders.length} orders failed.`;
       log(caller, message);
 
-      let labelsWithTracking = await Promise.all(successfulOrders.map(res => {
-        return saveLabelAndTracking(res, csvName);
-      }));
+      if (successfulOrders.length > 0) {
+        let labelsWithTracking = await Promise.all(successfulOrders.map(res => {
+          return saveLabelAndTracking(res, csvName);
+        }));
 
-      await mergeLabels(labelsWithTracking.map(obj => obj.label), csvName);
-      await archiveLabels(labelsWithTracking, csvName);
-      await trackingCsv(labelsWithTracking, csvName, `${csvDirectory}/tracking_numbers`);
+        await mergeLabels(labelsWithTracking.map(obj => obj.label), csvName);
+        await archiveLabels(labelsWithTracking, csvName);
+        await trackingCsv(labelsWithTracking, csvName, `${csvDirectory}/tracking_numbers`);
+      }
+
       await archiveCsv(csvName, csvDirectory, `${csvDirectory}/archive`);
 
       if (failedOrders.length > 0) {

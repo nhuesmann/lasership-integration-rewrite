@@ -6,7 +6,7 @@ const directories = [
   `${__dirname}/csv/split-by-tnt/archive`,
   `${__dirname}/csv/split-by-tnt/split-csvs`,
   `${__dirname}/csv/submit-lasership-orders/archive`,
-  `${__dirname}/csv/submit-lasership-orders/failed-orders`,
+  `${__dirname}/csv/submit-lasership-orders/failed`,
   `${__dirname}/csv/submit-lasership-orders/tracking_numbers`,
   `${__dirname}/csv/validate-addresses/archive`,
   `${__dirname}/csv/validate-addresses/failed`,

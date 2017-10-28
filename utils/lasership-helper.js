@@ -34,7 +34,7 @@ function lasershipTimes (order) {
  * @return {string}          The delivery date string.
  */
 function localDeliveryDate (order, datetime) {
-  return moment.utc(datetime.replace('Z', order.offset)).add(order.tnt, 'days').format();
+  return moment.utc(datetime.replace('Z', order.offset), moment.ISO_8601).add(order.tnt, 'days').format();
 }
 
 /**

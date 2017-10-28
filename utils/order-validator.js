@@ -5,7 +5,6 @@ const propsToValidate = [
   'city',
   'state',
   'country',
-  'telephone',
   'ship_date',
   'weight',
   'reference',
@@ -54,6 +53,8 @@ function validateOrder (order) {
       orderErrors.push(` Missing ${prop}`);
     }
   });
+
+  order.telephone = validate.telephone(order.telephone);
 
   if (orderErrors) {
     order.error = `Sales Order ${order.sales_order}: ${orderErrors}`;

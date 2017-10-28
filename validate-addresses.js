@@ -61,7 +61,8 @@ async function validateAddresses (csvNames) {
 async function validateAddressAndGetOffset (order) {
   if (order.error) return order;
 
-  const address = order.address_2 ? `${order.address_1} ${order.address_2}` : order.address_1;
+  let address = order.address_2 ? `${order.address_1} ${order.address_2}` : order.address_1;
+  address = `${address}, ${order.city}, ${order.state}`;
 
   try {
     let res = await googleMapsClient.geocode({
@@ -74,7 +75,7 @@ async function validateAddressAndGetOffset (order) {
         order.error_detail = res.json.error_message;
       }
     } else {
-      let address = res.json.results[0].address_components.reduce((prev, curr) => {
+      address = res.json.results[0].address_components.reduce((prev, curr) => {
         if (curr.types.length > 1) {
           curr.types = curr.types.filter(type => type !== 'political');
         }
@@ -85,7 +86,7 @@ async function validateAddressAndGetOffset (order) {
       address = validateAddressComponents(address);
 
       if (address.invalid) {
-        order.error = `Geocode: invalid ${address.invalid}`;
+        order.error = `Geocode: invalid components: ${address.invalid}`;
         return order;
       }
 
@@ -171,23 +172,30 @@ async function createOrUpdateCsvs (csvName, validatedOrders, failedOrders) {
   }
 }
 
+/**
+ * Validates all required address components are present in Google API response.
+ * @param  {object} address The address components from the API response.
+ * @return {object}         The address object with optional 'invalid' property.
+ */
 function validateAddressComponents (address) {
-  let invalid;
+  let invalid = '';
   let requiredAddressComponents = ['street_number', 'route', 'postal_code', 'administrative_area_level_1', 'country'];
 
   requiredAddressComponents.forEach(property => {
     if (!address.hasOwnProperty(property)) {
-      invalid = property;
+      invalid = [...invalid, property];
     }
   });
 
   if (!address.locality && !address.sublocality && !address.neighborhood && !address.administrative_area_level_3) {
-    invalid = 'city';
+    invalid = [...invalid, 'city'];
   }
 
-  if (invalid) {
-    address.invalid = invalid;
+  if (address.country !== 'US') {
+    invalid = [...invalid, 'country'];
   }
+
+  if (invalid) address.invalid = invalid.join(', ');
 
   return address;
 }
