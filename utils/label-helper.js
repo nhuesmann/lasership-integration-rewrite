@@ -38,8 +38,11 @@ function saveLabelAndTracking (res, csvName) {
  * @return {Promise}          Resolves if successful, rejects a new Error.
  */
 function mergeLabels (labelPaths, csvName) {
+  let pdfPath = `${pdfMergedDir}/${csvName.replace('.csv', '.pdf')}`;
+  if (fs.pathExistsSync(pdfPath)) pdfPath = pdfPath.replace('.pdf', '-1.pdf');
+
   return PDFMerge(labelPaths, { libPath: pdftkPath }).then((buffer) => {
-    return fs.writeFile(`${pdfMergedDir}/${csvName.replace('.csv', '.pdf')}`, buffer);
+    return fs.writeFile(pdfPath, buffer);
   })
   .then((data) => data)
   .catch((e) => {
@@ -57,7 +60,7 @@ function archiveLabels (labelObjects, csvName) {
   let archiveDir = `${pdfDirectory}/archive/${csvName.replace('.csv', '')}`;
 
   return Promise.all(labelObjects.map(labelObject => {
-    return fs.move(labelObject.label, `${archiveDir}/${labelObject.order}.pdf`);
+    return fs.move(labelObject.label, `${archiveDir}/${labelObject.order}.pdf`, { overwrite: true });
   })).then((movedSuccess) => {
     return fs.emptyDir(`${pdfDirectory}/temp`);
   });
