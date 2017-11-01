@@ -18,10 +18,6 @@ async function submitLasershipOrders (csvNames) {
     try {
       const buffer = await getCsvData(csvDirectory, csvName);
       let orders = parseCsv(buffer);
-
-      // TODO: fix error if PDF already exists (archive if exists)
-      // TODO: fix path error from terminal and failing csv creation
-
       orders = orders.map(order => {
         return limiter.schedule(submitOrder, order).catch(e => {
           let error;
