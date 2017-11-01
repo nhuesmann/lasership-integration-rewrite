@@ -4,7 +4,9 @@ const jsonfile = require('jsonfile');
 const directories = [
   `${__dirname}/config`,
   `${__dirname}/csv/split-by-tnt/archive`,
+  `${__dirname}/csv/split-by-tnt/lasership-zipcodes`,
   `${__dirname}/csv/split-by-tnt/split-csvs`,
+  `${__dirname}/csv/split-by-tnt/split-csvs/non-lasership`,
   `${__dirname}/csv/submit-lasership-orders/archive`,
   `${__dirname}/csv/submit-lasership-orders/failed`,
   `${__dirname}/csv/submit-lasership-orders/tracking_numbers`,
