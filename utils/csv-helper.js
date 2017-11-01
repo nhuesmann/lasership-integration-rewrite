@@ -29,7 +29,7 @@ function getCsvData (csvDirectory, csvName) {
  * @return {array} Array of order objects.
  */
 function parseCsv (buffer) {
-  return parse(buffer, {columns: validateHeaders});
+  return parse(buffer, { columns: validateHeaders, rtrim: true });
 };
 
 /**

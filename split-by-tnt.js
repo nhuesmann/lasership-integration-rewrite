@@ -71,8 +71,15 @@ function filterLsZips (orders, lsZips) {
     return order;
   });
 
-  let lasershipOrders = orders.filter(order => order.isLsZip);
-  let nonLasershipOrders = orders.filter(order => !order.isLsZip);
+  let lasershipOrders = orders.filter(order => order.isLsZip).map(order => {
+    delete order.isLsZip;
+    return order;
+  });
+  
+  let nonLasershipOrders = orders.filter(order => !order.isLsZip).map(order => {
+    delete order.isLsZip;
+    return order;
+  });
 
   return {
     lasershipOrders,
