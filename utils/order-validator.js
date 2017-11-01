@@ -56,6 +56,18 @@ function validateOrder (order) {
 
   order.telephone = validate.telephone(order.telephone);
 
+  // Specific validation for address_2 field
+  let validAddrTwoFields = ['ste', 'suite', 'apt', 'apartment', '#', 'unit'];
+
+  if (order.address_2.length > 0 && (order.address_2.length >= 15 || !validAddrTwoFields.some(field => order.address_2.toLowerCase().startsWith(field)))) {
+    if (order.special_delivery_instructions) {
+      order.special_delivery_instructions = `${order.address_2} - ${order.special_delivery_instructions}`;
+    } else {
+      order.special_delivery_instructions = order.address_2;
+    }
+    order.address_2 = '';
+  }
+
   if (orderErrors) {
     order.error = `Sales Order ${order.sales_order}: ${orderErrors}`;
   }

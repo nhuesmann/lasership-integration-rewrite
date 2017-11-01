@@ -93,7 +93,7 @@ async function validateAddressAndGetOffset (order) {
       order.validated_address = res.json.results[0].formatted_address;
       order.geo_lat = res.json.results[0].geometry.location.lat;
       order.geo_lng = res.json.results[0].geometry.location.lng;
-      order.address_1 = `${address.street_number} ${address.route}`;
+      order.address_1 = address.street_number ? `${address.street_number} ${address.route}` : order.address_1;
       order.address_2 = address.subpremise || '';
       order.postal_code = address.postal_code;
       order.city = address.locality || address.sublocality || address.neighborhood || address.administrative_area_level_3;
@@ -179,7 +179,7 @@ async function createOrUpdateCsvs (csvName, validatedOrders, failedOrders) {
  */
 function validateAddressComponents (address) {
   let invalid = '';
-  let requiredAddressComponents = ['street_number', 'route', 'postal_code', 'administrative_area_level_1', 'country'];
+  let requiredAddressComponents = ['route', 'postal_code', 'administrative_area_level_1', 'country'];
 
   requiredAddressComponents.forEach(property => {
     if (!address.hasOwnProperty(property)) {
