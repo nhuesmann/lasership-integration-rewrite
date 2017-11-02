@@ -83,7 +83,7 @@ function LasershipOrder (order) {
     LocationType: "Residence",
     CustomerClientID: "",
     Contact: order.contact_name,
-    Organization: order.company_name,
+    Organization: order.company_name || order.company,
     Address: order.address_1,
     Address2: order.address_2,
     PostalCode: order.postal_code,
