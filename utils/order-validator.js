@@ -8,23 +8,25 @@ const propsToValidate = [
   'ship_date',
   'weight',
   'reference',
-  'tnt'
+  'tnt',
 ];
 
 const validate = {
-  telephone: function(phone) {
+  telephone: function (phone) {
     return phone.length < 10
       ? '1111111111'
-      : phone.replace(/\W/g, " ").replace(/\s+/g, "");
+      : phone.replace(/\W/g, ' ').replace(/\s+/g, '');
   },
-  postal_code: function(zip) {
+
+  postal_code: function (zip) {
     return zip.length === 4
       ? `0${zip}`
       : zip;
   },
-  tnt: function(tnt) {
+
+  tnt: function (tnt) {
     return +tnt;
-  }
+  },
 };
 
 /**
@@ -33,7 +35,7 @@ const validate = {
  * @param  {object} order The order object.
  * @return {object}       The validated and cleansed order object.
  */
-function validateOrder (order) {
+function validateOrder(order) {
   delete order.error;
   delete order.error_detail;
 
@@ -59,12 +61,15 @@ function validateOrder (order) {
   // Specific validation for address_2 field
   let validAddrTwoFields = ['ste', 'suite', 'apt', 'apartment', '#', 'unit'];
 
-  if (order.address_2.length > 0 && (order.address_2.length >= 15 || !validAddrTwoFields.some(field => order.address_2.toLowerCase().startsWith(field)))) {
+  if (order.address_2.length > 0 && (order.address_2.length >= 15
+    || !validAddrTwoFields.some(field => order.address_2.toLowerCase().startsWith(field)))) {
+
     if (order.special_delivery_instructions) {
       order.special_delivery_instructions = `${order.address_2} - ${order.special_delivery_instructions}`;
     } else {
       order.special_delivery_instructions = order.address_2;
     }
+
     order.address_2 = '';
   }
 
@@ -76,5 +81,5 @@ function validateOrder (order) {
 }
 
 module.exports = {
-  validateOrder
-}
+  validateOrder,
+};

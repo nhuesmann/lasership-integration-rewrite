@@ -14,14 +14,14 @@ const googleMapsClient = require('@google/maps').createClient({
   Promise: Promise,
   rate: {
     limit: 50,
-    period: 1000
-  }
+    period: 1000,
+  },
 });
 
 const csvs = getCsvNames(csvDirectory);
 validateAddresses(csvs);
 
-async function validateAddresses (csvNames) {
+async function validateAddresses(csvNames) {
   for (let csvName of csvNames) {
     try {
       const buffer = await getCsvData(csvDirectory, csvName);
@@ -29,7 +29,8 @@ async function validateAddresses (csvNames) {
 
       orders = orders.map(order => validateOrder(order)).map(order => {
         let randInterval = Math.floor((Math.random() * 300) + 1);
-        return setTimeoutPromise(randInterval, order).then((order) => validateAddressAndGetOffset(order));
+        return setTimeoutPromise(randInterval, order)
+          .then((order) => validateAddressAndGetOffset(order));
       });
 
       orders = await Promise.all(orders);
@@ -58,16 +59,18 @@ async function validateAddresses (csvNames) {
  * @param {object} order The order object.
  * @return {object}      The modified order object.
  */
-async function validateAddressAndGetOffset (order) {
+async function validateAddressAndGetOffset(order) {
   if (order.error) return order;
 
   let address = order.address_2 ? `${order.address_1} ${order.address_2}` : order.address_1;
   address = `${address}, ${order.city}, ${order.state}`;
 
   try {
-    let res = await googleMapsClient.geocode({
-      address
-    }).asPromise();
+    let res = await googleMapsClient.geocode(
+      {
+        address,
+      }
+    ).asPromise();
 
     if (res.json.status !== 'OK') {
       order.error = `Geocode: ${res.json.status}`;
@@ -79,6 +82,7 @@ async function validateAddressAndGetOffset (order) {
         if (curr.types.length > 1) {
           curr.types = curr.types.filter(type => type !== 'political');
         }
+
         prev[curr.types[0]] = curr.short_name;
         return prev;
       }, {});
@@ -93,18 +97,25 @@ async function validateAddressAndGetOffset (order) {
       order.validated_address = res.json.results[0].formatted_address;
       order.geo_lat = res.json.results[0].geometry.location.lat;
       order.geo_lng = res.json.results[0].geometry.location.lng;
-      order.address_1 = address.street_number ? `${address.street_number} ${address.route}` : order.address_1;
+      order.address_1 = address.street_number
+        ? `${address.street_number} ${address.route}`
+        : order.address_1;
       order.address_2 = address.subpremise || '';
       order.postal_code = address.postal_code;
-      order.city = address.locality || address.sublocality || address.neighborhood || address.administrative_area_level_3;
+      order.city = address.locality
+        || address.sublocality
+        || address.neighborhood
+        || address.administrative_area_level_3;
       order.state = address.administrative_area_level_1;
       order.country = address.country;
 
       try {
-        let res = await googleMapsClient.timezone({
-          location: [order.geo_lat, order.geo_lng],
-          timestamp: Math.floor(new Date() / 1000)
-        }).asPromise();
+        let res = await googleMapsClient.timezone(
+          {
+            location: [order.geo_lat, order.geo_lng],
+            timestamp: Math.floor(new Date() / 1000),
+          }
+        ).asPromise();
 
         if (res.json.status !== 'OK') {
           order.error = `Timezone: ${res.json.status}`;
@@ -114,13 +125,14 @@ async function validateAddressAndGetOffset (order) {
         } else {
           let dstOffset = res.json.dstOffset;
           let rawOffset = res.json.rawOffset;
-          let offset = (dstOffset + rawOffset)/3600;
+          let offset = (dstOffset + rawOffset) / 3600;
 
           let negative;
           if (offset < 0) {
             negative = true;
             offset *= -1;
           }
+
           offset = offset < 10 ? `0${offset}:00` : `${offset}:00`;
           offset = negative ? `-${offset}` : offset;
 
@@ -145,7 +157,7 @@ async function validateAddressAndGetOffset (order) {
  * @param  {array} validatedOrders Array of orders that passed address validation.
  * @param  {array} failedOrders    Array of orders that failed address validation.
  */
-async function createOrUpdateCsvs (csvName, validatedOrders, failedOrders) {
+async function createOrUpdateCsvs(csvName, validatedOrders, failedOrders) {
   const validatedDir = `${csvDirectory}/validated`;
   const validated = getCsvNames(validatedDir);
 
@@ -177,7 +189,7 @@ async function createOrUpdateCsvs (csvName, validatedOrders, failedOrders) {
  * @param  {object} address The address components from the API response.
  * @return {object}         The address object with optional 'invalid' property.
  */
-function validateAddressComponents (address) {
+function validateAddressComponents(address) {
   let invalid = '';
   let requiredAddressComponents = ['route', 'postal_code', 'administrative_area_level_1', 'country'];
 

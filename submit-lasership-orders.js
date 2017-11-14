@@ -1,5 +1,5 @@
 require('./config/config');
-const Bottleneck = require("bottleneck");
+const Bottleneck = require('bottleneck');
 const limiter = new Bottleneck(40);
 
 const { getCsvNames, getCsvData, parseCsv, stringifyCsv, writeCsv, archiveCsv, trackingCsv } = require('./utils/csv-helper');
@@ -13,18 +13,18 @@ const csvDirectory = `${__dirname}/csv/submit-lasership-orders`;
 const csvs = getCsvNames(csvDirectory);
 submitLasershipOrders(csvs);
 
-async function submitLasershipOrders (csvNames) {
+async function submitLasershipOrders(csvNames) {
   for (let csvName of csvNames) {
     try {
       const buffer = await getCsvData(csvDirectory, csvName);
       let orders = parseCsv(buffer);
-      orders = orders.map(order => {
-        return limiter.schedule(submitOrder, order).catch(e => {
+      orders = orders.map(order => limiter.schedule(submitOrder, order)
+        .catch(e => {
           let error;
           if (e.error.constructor === String) {
             try {
               error = JSON.parse(e.error).ErrorMessage;
-            } catch(e) {
+            } catch (e) {
               error = error.message;
             }
           } else {
@@ -33,8 +33,7 @@ async function submitLasershipOrders (csvNames) {
 
           order.error = error;
           return order;
-        });
-      });
+        }));
 
       let responses = await Promise.all(orders);
       let failedOrders = responses.filter(res => res.error);
@@ -44,9 +43,7 @@ async function submitLasershipOrders (csvNames) {
       log(caller, message);
 
       if (successfulOrders.length > 0) {
-        let labelsWithTracking = await Promise.all(successfulOrders.map(res => {
-          return saveLabelAndTracking(res, csvName);
-        }));
+        let labelsWithTracking = await Promise.all(successfulOrders.map(res => saveLabelAndTracking(res, csvName)));
 
         await mergeLabels(labelsWithTracking.map(obj => obj.label), csvName);
         await archiveLabels(labelsWithTracking, csvName);

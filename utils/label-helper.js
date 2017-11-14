@@ -12,7 +12,7 @@ const pdfMergedDir = `${pdfDirectory}/merged-labels`;
  * @param  {string} csvName The name of the CSV.
  * @return {object}         An object containing the order number, PDF path, and tracking number.
  */
-function saveLabelAndTracking (res, csvName) {
+function saveLabelAndTracking(res, csvName) {
   res = JSON.parse(res);
   let reference = res.Order.CustomerOrderNumber;
   let tracking = res.Order.Pieces[0].LaserShipBarcode;
@@ -22,13 +22,12 @@ function saveLabelAndTracking (res, csvName) {
   let pdfPath = `${pdfTempDir}/${reference}.pdf`;
   fs.ensureDirSync(pdfTempDir);
 
-  return fs.writeFile(pdfPath, labelBuffer).then((savedPDF) => {
-    return {
+  return fs.writeFile(pdfPath, labelBuffer)
+    .then((savedPDF) => ({
       order: reference,
       label: pdfPath,
-      tracking
-    };
-  });
+      tracking,
+    }));
 }
 
 /**
@@ -37,17 +36,14 @@ function saveLabelAndTracking (res, csvName) {
  * @param  {string} csvName   The name of the CSV.
  * @return {Promise}          Resolves if successful, rejects a new Error.
  */
-function mergeLabels (labelPaths, csvName) {
+function mergeLabels(labelPaths, csvName) {
   let pdfPath = `${pdfMergedDir}/${csvName.replace('.csv', '.pdf')}`;
   if (fs.pathExistsSync(pdfPath)) pdfPath = pdfPath.replace('.pdf', '-1.pdf');
 
-  return PDFMerge(labelPaths, { libPath: pdftkPath }).then((buffer) => {
-    return fs.writeFile(pdfPath, buffer);
-  })
-  .then((data) => data)
-  .catch((e) => {
-    return new Error(e);
-  });
+  return PDFMerge(labelPaths, { libPath: pdftkPath })
+    .then((buffer) => fs.writeFile(pdfPath, buffer))
+    .then((data) => data)
+    .catch((e) => new Error(e));
 }
 
 /**
@@ -56,18 +52,18 @@ function mergeLabels (labelPaths, csvName) {
  * @param  {string} csvName     The name of the CSV.
  * @return {Promise}            Resolves if successful, rejects with an error.
  */
-function archiveLabels (labelObjects, csvName) {
+function archiveLabels(labelObjects, csvName) {
   let archiveDir = `${pdfDirectory}/archive/${csvName.replace('.csv', '')}`;
 
-  return Promise.all(labelObjects.map(labelObject => {
-    return fs.move(labelObject.label, `${archiveDir}/${labelObject.order}.pdf`, { overwrite: true });
-  })).then((movedSuccess) => {
-    return fs.emptyDir(`${pdfDirectory}/temp`);
-  });
+  return Promise.all(labelObjects.map(labelObject =>
+    fs.move(labelObject.label, `${archiveDir}/${labelObject.order}.pdf`, { overwrite: true })
+  )).then((movedSuccess) =>
+    fs.emptyDir(`${pdfDirectory}/temp`)
+  );
 }
 
 module.exports = {
   saveLabelAndTracking,
   mergeLabels,
-  archiveLabels
+  archiveLabels,
 };

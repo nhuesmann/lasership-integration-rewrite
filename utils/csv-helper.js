@@ -7,10 +7,8 @@ const fs = require('fs-extra');
  * @param {string} csvDirectory The path of the CSV directory.
  * @return {array} An array of CSV name strings.
  */
-function getCsvNames (csvDirectory) {
-  return fs.readdirSync(csvDirectory).filter(filename => {
-    return filename.endsWith('.csv');
-  });
+function getCsvNames(csvDirectory) {
+  return fs.readdirSync(csvDirectory).filter(filename => filename.endsWith('.csv'));
 };
 
 /**
@@ -19,7 +17,7 @@ function getCsvNames (csvDirectory) {
  * @param {string} csvName The name of the CSV.
  * @return {buffer} Buffer representing the CSV.
  */
-function getCsvData (csvDirectory, csvName) {
+function getCsvData(csvDirectory, csvName) {
   return fs.readFile(`${csvDirectory}/${csvName}`);
 };
 
@@ -28,7 +26,7 @@ function getCsvData (csvDirectory, csvName) {
  * @param {buffer} buffer Buffer representing the CSV.
  * @return {array} Array of order objects.
  */
-function parseCsv (buffer) {
+function parseCsv(buffer) {
   return parse(buffer, { columns: validateHeaders, ltrim: true, rtrim: true });
 };
 
@@ -37,7 +35,7 @@ function parseCsv (buffer) {
  * @param  {array} orders Array of order objects.
  * @return {Promise} Resolves with the string, rejects any error.
  */
-function stringifyCsv (orders) {
+function stringifyCsv(orders) {
   let columns = Object.keys(orders[0]).reduce((prev, curr) => {
     prev[curr] = curr;
     return prev;
@@ -46,11 +44,12 @@ function stringifyCsv (orders) {
   return new Promise((resolve, reject) => {
     stringify(orders, {
       columns,
-      header: true
+      header: true,
     }, (err, output) => {
       if (err) {
         reject(err);
       }
+
       resolve(output);
     });
   });
@@ -63,7 +62,7 @@ function stringifyCsv (orders) {
  * @param  {string} csvString    The stringified CSV.
  * @return {Promise}             Resolves if write was successful, rejects any error.
  */
-function writeCsv (csvDirectory, csvName, csvString) {
+function writeCsv(csvDirectory, csvName, csvString) {
   return fs.writeFile(`${csvDirectory}/${csvName}`, csvString);
 }
 
@@ -73,7 +72,7 @@ function writeCsv (csvDirectory, csvName, csvString) {
  * @param  {string} currentDir Source CSV directory.
  * @param  {string} archiveDir Target CSV archive directory.
  */
-function archiveCsv (csvName, currentDir, archiveDir) {
+function archiveCsv(csvName, currentDir, archiveDir) {
   let archivedCsvs = getCsvNames(archiveDir);
   if (archivedCsvs.indexOf(csvName) === -1) {
     let src = `${currentDir}/${csvName}`;
@@ -92,17 +91,14 @@ function archiveCsv (csvName, currentDir, archiveDir) {
  * @return {Promise}                  Resolves if write stringify and write
  * operations are successful, rejects an error.
  */
-function trackingCsv (labelsWithTracking, csvName, csvDirectory) {
-  let orders = labelsWithTracking.map(order => {
-    return {
-      order: order.order,
-      tracking_number: order.tracking
-    };
-  });
+function trackingCsv(labelsWithTracking, csvName, csvDirectory) {
+  let orders = labelsWithTracking.map(order => ({
+    order: order.order,
+    tracking_number: order.tracking,
+  }));
 
-  return stringifyCsv(orders).then((csvString) => {
-    return writeCsv(csvDirectory, csvName, csvString);
-  });
+  return stringifyCsv(orders)
+    .then((csvString) => writeCsv(csvDirectory, csvName, csvString));
 }
 
 /**
@@ -110,10 +106,12 @@ function trackingCsv (labelsWithTracking, csvName, csvDirectory) {
  * @param  {array} headers Original column headers.
  * @return {array} Renamed column headers.
  */
-function validateHeaders (headers) {
-  return headers.map(header => {
-    return header.replace(/\W/g, ' ').replace(/\s+/g, '_').replace(/_$/g, '').toLowerCase();
-  });
+function validateHeaders(headers) {
+  return headers.map(header => header
+    .replace(/\W/g, ' ')
+    .replace(/\s+/g, '_')
+    .replace(/_$/g, '')
+    .toLowerCase());
 };
 
 module.exports = {
@@ -123,5 +121,5 @@ module.exports = {
   stringifyCsv,
   writeCsv,
   archiveCsv,
-  trackingCsv
+  trackingCsv,
 };

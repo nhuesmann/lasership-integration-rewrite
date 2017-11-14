@@ -8,7 +8,7 @@ const lsZipsDirectory = `${csvDirectory}/lasership-zipcodes`;
 
 main();
 
-async function main () {
+async function main() {
   let buffer = await getCsvData(lsZipsDirectory, 'lasership-zipcodes.csv');
   let lasershipZips = parseCsv(buffer);
   lasershipZips = lasershipZips.reduce((prev, curr) => {
@@ -21,7 +21,7 @@ async function main () {
   csvs.forEach(csv => splitByTnt(csv, lasershipZips));
 }
 
-async function splitByTnt (csvName, lsZips) {
+async function splitByTnt(csvName, lsZips) {
   try {
     const buffer = await getCsvData(csvDirectory, csvName);
     const orders = parseCsv(buffer);
@@ -53,7 +53,7 @@ async function splitByTnt (csvName, lsZips) {
   }
 }
 
-function filterTnt (orders) {
+function filterTnt(orders) {
   return orders.reduce((prev, curr) => {
     curr.tnt = parseInt(curr.tnt);
     prev[`tnt${curr.tnt}`]
@@ -63,7 +63,7 @@ function filterTnt (orders) {
   }, {});
 }
 
-function filterLsZips (orders, lsZips) {
+function filterLsZips(orders, lsZips) {
   orders = orders.map(order => {
     let zip = order.postal_code;
     zip = zip.length === 4 ? `0${zip}` : zip;
@@ -75,7 +75,7 @@ function filterLsZips (orders, lsZips) {
     delete order.isLsZip;
     return order;
   });
-  
+
   let nonLasershipOrders = orders.filter(order => !order.isLsZip).map(order => {
     delete order.isLsZip;
     return order;
@@ -83,6 +83,6 @@ function filterLsZips (orders, lsZips) {
 
   return {
     lasershipOrders,
-    nonLasershipOrders
+    nonLasershipOrders,
   };
 }
