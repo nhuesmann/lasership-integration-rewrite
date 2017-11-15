@@ -71,15 +71,17 @@ function writeCsv(csvDirectory, csvName, csvString) {
  * @param  {string} csvName    The name of the CSV.
  * @param  {string} currentDir Source CSV directory.
  * @param  {string} archiveDir Target CSV archive directory.
+ * @return {Promise}           Resolves if archive or delete was successful,
+ * rejects any error.
  */
 function archiveCsv(csvName, currentDir, archiveDir) {
   let archivedCsvs = getCsvNames(archiveDir);
   if (archivedCsvs.indexOf(csvName) === -1) {
     let src = `${currentDir}/${csvName}`;
     let destination = `${archiveDir}/${csvName}`;
-    fs.move(src, destination);
+    return fs.move(src, destination);
   } else {
-    fs.remove(`${currentDir}/${csvName}`);
+    return fs.remove(`${currentDir}/${csvName}`);
   }
 }
 

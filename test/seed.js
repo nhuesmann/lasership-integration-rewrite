@@ -1,6 +1,6 @@
 const fs = require('fs');
+const path = require('path');
 
-const csvDirectory = `${__dirname}/csv`;
 const pdfDirectory = `${__dirname}/pdf`;
 const today = new Date().toLocaleDateString('en-US');
 
@@ -97,12 +97,46 @@ const orderToCleanse = {
   carrier: 'LaserShip',
 };
 
-function createCsv() {
-  fs.writeFileSync(`${csvDirectory}/split-by-tnt/csv-test.csv`, testOrderString);
+const orderTrackingObjects = [
+  {
+    order: '123456',
+    tracking: 'trackingnumber1',
+  },
+  {
+    order: '654321',
+    tracking: 'trackingnumber2',
+  },
+];
+
+function setupCsvs() {
+  fs.writeFileSync(`${__dirname}/csv/split-by-tnt/csv-test.csv`, testOrderString);
+  fs.writeFileSync(`${__dirname}/seed/csv-test.csv`, testOrderString);
+
+  fs.createReadStream(`${__dirname}/seed/lasership-zipcodes.csv`)
+    .pipe(fs.createWriteStream(`${__dirname}/csv/split-by-tnt/lasership-zipcodes/lasership-zipcodes.csv`));
+}
+
+function cleanUp() {
+  walkSync(`${__dirname}/csv`)
+    .filter(file => file.endsWith('.csv') || file.endsWith('.txt'))
+    .forEach(path => fs.unlinkSync(path));
+}
+
+function walkSync(dir, filelist = []) {
+  fs.readdirSync(dir).forEach(file => {
+
+    filelist = fs.statSync(path.join(dir, file)).isDirectory()
+      ? walkSync(path.join(dir, file), filelist)
+      : filelist.concat(path.join(dir, file));
+  });
+
+  return filelist;
 }
 
 module.exports = {
-  createCsv,
+  setupCsvs,
+  cleanUp,
   testOrder,
   testOrderString,
+  orderTrackingObjects,
 };

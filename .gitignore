@@ -1,5 +1,6 @@
 node_modules/
-csv/
-pdf/
+**/*.csv
+**/*.txt
+**/*.pdf
 config.json
 lasership.log
