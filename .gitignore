@@ -4,3 +4,4 @@ node_modules/
 **/*.pdf
 config.json
 lasership.log
+.eslintrc

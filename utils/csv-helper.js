@@ -36,7 +36,7 @@ function parseCsv(buffer) {
  * @return {Promise} Resolves with the string, rejects any error.
  */
 function stringifyCsv(orders) {
-  let columns = Object.keys(orders[0]).reduce((prev, curr) => {
+  const columns = Object.keys(orders[0]).reduce((prev, curr) => {
     prev[curr] = curr;
     return prev;
   }, {});
@@ -75,14 +75,13 @@ function writeCsv(csvDirectory, csvName, csvString) {
  * rejects any error.
  */
 function archiveCsv(csvName, currentDir, archiveDir) {
-  let archivedCsvs = getCsvNames(archiveDir);
+  const archivedCsvs = getCsvNames(archiveDir);
   if (archivedCsvs.indexOf(csvName) === -1) {
-    let src = `${currentDir}/${csvName}`;
-    let destination = `${archiveDir}/${csvName}`;
+    const src = `${currentDir}/${csvName}`;
+    const destination = `${archiveDir}/${csvName}`;
     return fs.move(src, destination);
-  } else {
-    return fs.remove(`${currentDir}/${csvName}`);
   }
+  return fs.remove(`${currentDir}/${csvName}`);
 }
 
 /**
@@ -94,13 +93,13 @@ function archiveCsv(csvName, currentDir, archiveDir) {
  * operations are successful, rejects an error.
  */
 function trackingCsv(labelsWithTracking, csvName, csvDirectory) {
-  let orders = labelsWithTracking.map(order => ({
+  const orders = labelsWithTracking.map(order => ({
     order: order.order,
     tracking_number: order.tracking,
   }));
 
   return stringifyCsv(orders)
-    .then((csvString) => writeCsv(csvDirectory, csvName, csvString));
+    .then(csvString => writeCsv(csvDirectory, csvName, csvString));
 }
 
 /**
@@ -114,7 +113,7 @@ function validateHeaders(headers) {
     .replace(/\s+/g, '_')
     .replace(/_$/g, '')
     .toLowerCase());
-};
+}
 
 module.exports = {
   getCsvNames,

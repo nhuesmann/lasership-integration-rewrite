@@ -1,4 +1,4 @@
-const expect = require('chai').expect;
+const { expect } = require('chai');
 
 const testDirectory = `${__dirname}/../test`;
 const seed = require(`${testDirectory}/seed.js`);
@@ -10,7 +10,7 @@ describe('The csv helper module', function () {
   before(seed.setupCsvs);
 
   it('getCsvNames() gets the csv names', function () {
-    let names = csvHelper.getCsvNames(csvSplitDir);
+    const names = csvHelper.getCsvNames(csvSplitDir);
 
     expect(names).to.be.an('array');
     expect(names).to.have.lengthOf(1);
@@ -18,20 +18,20 @@ describe('The csv helper module', function () {
   });
 
   it('getCsvData() gets the csv buffer', async function () {
-    let csvPromise = csvHelper.getCsvData(csvSplitDir, 'csv-test.csv');
+    const csvPromise = csvHelper.getCsvData(csvSplitDir, 'csv-test.csv');
 
     expect(csvPromise).to.be.a('promise');
     expect(await csvPromise).to.be.instanceof(Buffer);
   });
 
   it('parseCsv() gets the csv data', async function () {
-    let buffer = await csvHelper.getCsvData(csvSplitDir, 'csv-test.csv');
-    let csvData = csvHelper.parseCsv(buffer);
+    const buffer = await csvHelper.getCsvData(csvSplitDir, 'csv-test.csv');
+    const csvData = csvHelper.parseCsv(buffer);
 
     expect(csvData).to.be.an('array');
     expect(csvData).to.have.lengthOf(1);
 
-    let order = csvData[0];
+    const order = csvData[0];
 
     expect(order).to.be.an('object');
     expect(order).to.have.own.property('contact_name');
@@ -39,18 +39,18 @@ describe('The csv helper module', function () {
   });
 
   it('stringifyCsv() creates a csv string', async function () {
-    let csvData = [seed.testOrder];
-    let csvString = await csvHelper.stringifyCsv(csvData);
+    const csvData = [seed.testOrder];
+    const csvString = await csvHelper.stringifyCsv(csvData);
 
     expect(csvString).to.equal(seed.testOrderString);
   });
 
   it('writeCsv() writes the csv to disk', async function () {
-    let savedCsv = await csvHelper.writeCsv(
+    const savedCsv = await csvHelper.writeCsv(
       `${csvSplitDir}/split-csvs`, 'csv-write-test.csv', seed.testOrderString
     );
 
-    let foundCsvs = csvHelper.getCsvNames(`${csvSplitDir}/split-csvs`);
+    const foundCsvs = csvHelper.getCsvNames(`${csvSplitDir}/split-csvs`);
     expect(foundCsvs).to.be.an('array');
     expect(foundCsvs).to.have.lengthOf(1);
     expect(foundCsvs[0]).to.equal('csv-write-test.csv');
@@ -58,8 +58,8 @@ describe('The csv helper module', function () {
 
   it('archiveCsv() moves the csv to archive folder', async function () {
     await csvHelper.archiveCsv('csv-test.csv', `${testDirectory}/seed`, `${csvSplitDir}/archive`);
-    let origin = csvHelper.getCsvNames(`${testDirectory}/seed`);
-    let archived = csvHelper.getCsvNames(`${csvSplitDir}/archive`);
+    const origin = csvHelper.getCsvNames(`${testDirectory}/seed`);
+    const archived = csvHelper.getCsvNames(`${csvSplitDir}/archive`);
 
     expect(origin).to.be.an('array');
     expect(origin).to.not.include('csv-test.csv');
@@ -68,7 +68,7 @@ describe('The csv helper module', function () {
   });
 
   it('trackingCsv() creates the tracking number csv', async function () {
-    let trackingDir = `${csvRootDirectory}/submit-lasership-orders/tracking_numbers`;
+    const trackingDir = `${csvRootDirectory}/submit-lasership-orders/tracking_numbers`;
 
     await csvHelper.trackingCsv(
       seed.orderTrackingObjects, 'csv-tracking-test.csv', trackingDir
