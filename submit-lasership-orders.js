@@ -9,6 +9,7 @@ const { log } = require('./utils/log');
 
 const caller = 'submit-lasership-orders';
 const csvDirectory = `${__dirname}/csv/submit-lasership-orders`;
+const pdfDirectory = `${__dirname}/pdf`;
 
 const csvs = getCsvNames(csvDirectory);
 submitLasershipOrders(csvs);
@@ -43,10 +44,12 @@ async function submitLasershipOrders(csvNames) {
       log(caller, message);
 
       if (successfulOrders.length > 0) {
-        let labelsWithTracking = await Promise.all(successfulOrders.map(res => saveLabelAndTracking(res, csvName)));
+        let labelsWithTracking = await Promise.all(
+          successfulOrders.map(res => saveLabelAndTracking(pdfDirectory, res, csvName))
+        );
 
-        await mergeLabels(labelsWithTracking.map(obj => obj.label), csvName);
-        await archiveLabels(labelsWithTracking, csvName);
+        await mergeLabels(pdfDirectory, labelsWithTracking.map(obj => obj.label), csvName);
+        await archiveLabels(pdfDirectory, labelsWithTracking, csvName);
         await trackingCsv(labelsWithTracking, csvName, `${csvDirectory}/tracking_numbers`);
       }
 

@@ -9,7 +9,7 @@ const fs = require('fs-extra');
  */
 function getCsvNames(csvDirectory) {
   return fs.readdirSync(csvDirectory).filter(filename => filename.endsWith('.csv'));
-};
+}
 
 /**
  * Reads the CSV.
@@ -19,7 +19,7 @@ function getCsvNames(csvDirectory) {
  */
 function getCsvData(csvDirectory, csvName) {
   return fs.readFile(`${csvDirectory}/${csvName}`);
-};
+}
 
 /**
  * Converts the order lines in the CSV to an array of order objects.
@@ -28,7 +28,7 @@ function getCsvData(csvDirectory, csvName) {
  */
 function parseCsv(buffer) {
   return parse(buffer, { columns: validateHeaders, ltrim: true, rtrim: true });
-};
+}
 
 /**
  * Converts order objects into a CSV string.

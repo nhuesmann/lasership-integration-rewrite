@@ -1,10 +1,10 @@
 const fs = require('fs-extra');
 const PDFMerge = require('pdf-merge');
-const path = require('path');
+// const path = require('path');
 
-const pdfDirectory = path.join(__dirname, '../pdf');
+// const pdfDirectory = path.join(__dirname, '../pdf');
 const pdftkPath = '/usr/local/bin/pdftk';
-const pdfMergedDir = `${pdfDirectory}/merged-labels`;
+// const pdfMergedDir = `${pdfDirectory}/merged-labels`;
 
 /**
  * Writes the label buffer from the response to disk and retrieves the tracking number.
@@ -12,7 +12,7 @@ const pdfMergedDir = `${pdfDirectory}/merged-labels`;
  * @param  {string} csvName The name of the CSV.
  * @return {object}         An object containing the order number, PDF path, and tracking number.
  */
-function saveLabelAndTracking(res, csvName) {
+function saveLabelAndTracking(pdfDirectory, res, csvName) {
   res = JSON.parse(res);
   let reference = res.Order.CustomerOrderNumber;
   let tracking = res.Order.Pieces[0].LaserShipBarcode;
@@ -36,8 +36,8 @@ function saveLabelAndTracking(res, csvName) {
  * @param  {string} csvName   The name of the CSV.
  * @return {Promise}          Resolves if successful, rejects a new Error.
  */
-function mergeLabels(labelPaths, csvName) {
-  let pdfPath = `${pdfMergedDir}/${csvName.replace('.csv', '.pdf')}`;
+function mergeLabels(pdfDirectory, labelPaths, csvName) {
+  let pdfPath = `${pdfDirectory}/merged-labels/${csvName.replace('.csv', '.pdf')}`;
   if (fs.pathExistsSync(pdfPath)) pdfPath = pdfPath.replace('.pdf', '-1.pdf');
 
   return PDFMerge(labelPaths, { libPath: pdftkPath })
@@ -52,7 +52,7 @@ function mergeLabels(labelPaths, csvName) {
  * @param  {string} csvName     The name of the CSV.
  * @return {Promise}            Resolves if successful, rejects with an error.
  */
-function archiveLabels(labelObjects, csvName) {
+function archiveLabels(pdfDirectory, labelObjects, csvName) {
   let archiveDir = `${pdfDirectory}/archive/${csvName.replace('.csv', '')}`;
 
   return Promise.all(labelObjects.map(labelObject =>
