@@ -1,8 +1,8 @@
 require('../config/config');
-const expect = require('chai').expect;
+const { expect } = require('chai');
+const path = require('path');
 
-const testDirectory = `${__dirname}/../test`;
-const seed = require(`${testDirectory}/seed.js`);
+const seed = require(path.join(__dirname, '../test/seed.js'));
 const lasershipHelper = require('./lasership-helper.js');
 
 describe('The lasership helper module', function () {

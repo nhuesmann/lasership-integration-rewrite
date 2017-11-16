@@ -1,6 +1,7 @@
 const { expect } = require('chai');
+const path = require('path');
 
-const testDirectory = `${__dirname}/../test`;
+const testDirectory = path.join(__dirname, '../test');
 const seed = require(`${testDirectory}/seed.js`);
 const csvHelper = require('./csv-helper.js');
 const csvRootDirectory = `${testDirectory}/csv`;
@@ -80,5 +81,7 @@ describe('The csv helper module', function () {
     expect(trackingCsv).to.include('csv-tracking-test.csv');
   });
 
-  after(seed.cleanUp);
+  after(() => {
+    seed.cleanUp('csv');
+  });
 });
