@@ -102,7 +102,7 @@ const orderToCleanse = {
   special_delivery_instructions: 'Please leave it in the middle of the parking lot',
   ship_date: shipDate(),
   reference: 'TEST ORDER - NEEDS CLEANSING',
-  tnt: 2,
+  tnt: '2',
   carrier: 'LaserShip',
 };
 
@@ -175,6 +175,8 @@ module.exports = {
   testOrder,
   testOrderString,
   validOrder,
+  invalidOrder,
+  orderToCleanse,
   orderTrackingObjects,
   labelPaths,
   labelObjects,
