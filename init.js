@@ -38,7 +38,6 @@ const configJson = {
   }
 };
 
-fs.ensureDirSync(`${__dirname}/config`);
 ensureDirs(__dirname);
 ensureDirs(`${__dirname}/test`);
 jsonfile.writeFileSync(`${__dirname}/config/config.json`, configJson, {spaces: 2});
