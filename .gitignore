@@ -5,3 +5,6 @@ node_modules/
 config.json
 lasership.log
 .eslintrc
+
+!654321.pdf
+!lasership-zipcodes.csv
