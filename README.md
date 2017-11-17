@@ -60,7 +60,6 @@ All script activity and/or errors will be logged in `lasership.log`.
 
 ## Tests
 
-**TESTS NOT UPDATED TO SUPPORT REWRITE. COMING SOON**
 Tests cover all utility modules used by the main process.
 ```shell
 $ npm test
