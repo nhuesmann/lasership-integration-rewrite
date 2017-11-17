@@ -27,20 +27,22 @@ async function validateAddresses(csvNames) {
       const buffer = await getCsvData(csvDirectory, csvName);
       let orders = parseCsv(buffer);
 
+      // Run all orders through the order validator before sending to google API
       orders = orders.map(order => validateOrder(order)).map(order => {
         let randInterval = Math.floor((Math.random() * 300) + 1);
         return setTimeoutPromise(randInterval, order)
           .then((order) => validateAddressAndGetOffset(order));
       });
 
+      // Await all responses and separate validated from failed orders
       orders = await Promise.all(orders);
-
       let validatedOrders = orders.filter(order => !order.error);
       let failedOrders = orders.filter(order => order.error);
 
       let message = `${csvName} \n- ${validatedOrders.length} addresses validated successfully. \n- ${failedOrders.length} addresses failed validation.`;
       log(caller, message);
 
+      // Create or update validated and failed csvs, then archive the original csv
       await createOrUpdateCsvs(csvName, validatedOrders, failedOrders);
       await archiveCsv(csvName, csvDirectory, `${csvDirectory}/archive`);
 
@@ -62,9 +64,11 @@ async function validateAddresses(csvNames) {
 async function validateAddressAndGetOffset(order) {
   if (order.error) return order;
 
+  // Create a string representing the full address
   let address = order.address_2 ? `${order.address_1} ${order.address_2}` : order.address_1;
   address = `${address}, ${order.city}, ${order.state}`;
 
+  // Call Google geocode API to get the latitude and longitude
   try {
     let res = await googleMapsClient.geocode(
       {
@@ -72,12 +76,15 @@ async function validateAddressAndGetOffset(order) {
       }
     ).asPromise();
 
+    // Handle errors if address is not found
     if (res.json.status !== 'OK') {
       order.error = `Geocode: ${res.json.status}`;
       if (res.json.error_message) {
         order.error_detail = res.json.error_message;
       }
     } else {
+
+      // Create an enum of the address components returned
       address = res.json.results[0].address_components.reduce((prev, curr) => {
         if (curr.types.length > 1) {
           curr.types = curr.types.filter(type => type !== 'political');
@@ -87,6 +94,7 @@ async function validateAddressAndGetOffset(order) {
         return prev;
       }, {});
 
+      // Validate that all required address components are present
       address = validateAddressComponents(address);
 
       if (address.invalid) {
@@ -94,6 +102,7 @@ async function validateAddressAndGetOffset(order) {
         return order;
       }
 
+      // Update the order with the cleansed and validated Google API data
       order.validated_address = res.json.results[0].formatted_address;
       order.geo_lat = res.json.results[0].geometry.location.lat;
       order.geo_lng = res.json.results[0].geometry.location.lng;
@@ -109,6 +118,7 @@ async function validateAddressAndGetOffset(order) {
       order.state = address.administrative_area_level_1;
       order.country = address.country;
 
+      // Call the Google timezone API to get the UTC offset
       try {
         let res = await googleMapsClient.timezone(
           {
@@ -123,6 +133,8 @@ async function validateAddressAndGetOffset(order) {
             order.error_detail = res.json.error_message;
           }
         } else {
+
+          // Calculate the offset and convert to a string
           let dstOffset = res.json.dstOffset;
           let rawOffset = res.json.rawOffset;
           let offset = (dstOffset + rawOffset) / 3600;

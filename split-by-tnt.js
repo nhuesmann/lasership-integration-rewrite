@@ -9,6 +9,7 @@ const lsZipsDirectory = `${csvDirectory}/lasership-zipcodes`;
 main();
 
 async function main() {
+  // Load, parse, and cleanse the zip codes CSV
   let buffer = await getCsvData(lsZipsDirectory, 'lasership-zipcodes.csv');
   let lasershipZips = parseCsv(buffer);
   lasershipZips = lasershipZips.reduce((prev, curr) => {
@@ -21,11 +22,18 @@ async function main() {
   csvs.forEach(csv => splitByTnt(csv, lasershipZips));
 }
 
+/**
+ * Filters by lasership/non-lasership zip codes, then creates separate csvs for
+ * each TNT found on the order form.
+ * @param  {string} csvName The name of the csv.
+ * @param  {array} lsZips   An array of all Lasership zip codes.
+ */
 async function splitByTnt(csvName, lsZips) {
   try {
     const buffer = await getCsvData(csvDirectory, csvName);
     const orders = parseCsv(buffer);
 
+    // Separate orders by lasership and non-lasership zips for later processing
     let { lasershipOrders, nonLasershipOrders } = filterLsZips(orders, lsZips);
 
     if (nonLasershipOrders.length > 0) {
@@ -33,8 +41,10 @@ async function splitByTnt(csvName, lsZips) {
       writeCsv(`${csvDirectory}/split-csvs/non-lasership`, csvName, nonLsString);
     }
 
+    // Build an object with properties matching the different TNT values
     const tntObject = filterTnt(lasershipOrders);
 
+    // Create a separate CSV for each TNT value
     for (var tnt in tntObject) {
       if (tntObject.hasOwnProperty(tnt)) {
         let csvString = await stringifyCsv(tntObject[tnt]);
@@ -53,6 +63,12 @@ async function splitByTnt(csvName, lsZips) {
   }
 }
 
+/**
+ * Creates an enum object for each TNT present in the orders array.
+ * @param  {array} orders The orders from the csv.
+ * @return {object}       An enum object with properties matching all TNTs from
+ * the csv. The value for each property is an array of orders with that TNT.
+ */
 function filterTnt(orders) {
   return orders.reduce((prev, curr) => {
     curr.tnt = parseInt(curr.tnt);
@@ -63,6 +79,13 @@ function filterTnt(orders) {
   }, {});
 }
 
+/**
+ * Filters orders by eligibility for lasership based on zip code.
+ * @param  {array} orders The orders from the csv.
+ * @param  {array} lsZips The zip codes lasership services.
+ * @return {object}       An object containing an array of orders eligible for
+ * lasership and an array of orders outside the lasership service area.
+ */
 function filterLsZips(orders, lsZips) {
   orders = orders.map(order => {
     let zip = order.postal_code;
