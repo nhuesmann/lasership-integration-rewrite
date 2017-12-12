@@ -58,15 +58,17 @@ async function validateAddresses(csvNames) {
 /**
  * Validates address using Google Geocode API and gets the timezone offset and
  * Google formatted address string.
- * @param {object} order The order object.
- * @return {object}      The modified order object.
+ * @param {object} order      The order object.
+ * @param {string} [retryZip] The zip code string of an address that is retrying Google API call
+ * @return {object}           The modified order object.
  */
-async function validateAddressAndGetOffset(order) {
+async function validateAddressAndGetOffset(order, retryZip) {
   if (order.error) return order;
 
-  // Create a string representing the full address
-  let address = order.address_2 ? `${order.address_1} ${order.address_2}` : order.address_1;
-  address = `${address}, ${order.city}, ${order.state}`;
+  // Create a string representing the full address or the zip code if retrying the API call
+  let address = retryZip
+    ? retryZip
+    : `${order.address_1}, ${order.city}, ${order.state} ${order.postal_code}`;
 
   // Call Google geocode API to get the latitude and longitude
   try {
@@ -76,57 +78,46 @@ async function validateAddressAndGetOffset(order) {
       }
     ).asPromise();
 
-    // Handle errors if address is not found
+    /**
+     * If API error, add to order and skip processing. If address not found,
+     * retry Geocode API call using only the zip code.
+     */
     if (res.json.status !== 'OK') {
+      if (res.json.status === 'ZERO_RESULTS') {
+        return validateAddressAndGetOffset(order, order.postal_code);
+      }
       order.error = `Geocode: ${res.json.status}`;
-      if (res.json.error_message) {
-        order.error_detail = res.json.error_message;
-      }
+
     } else {
+      // If no errors, continue process. First, find the zip from the response
+      let foundZip = res.json.results[0].address_components
+        .find(component => component.types[0] === 'postal_code').long_name;
 
-      // Create an enum of the address components returned
-      address = res.json.results[0].address_components.reduce((prev, curr) => {
-        if (curr.types.length > 1) {
-          curr.types = curr.types.filter(type => type !== 'political');
-        }
+      // Verify the zip found by Google matches the order's zip
+      let correctAddressFound = order.postal_code === foundZip;
 
-        prev[curr.types[0]] = curr.short_name;
-        return prev;
-      }, {});
-
-      // Validate that all required address components are present
-      address = validateAddressComponents(address);
-
-      if (address.invalid) {
-        order.error = `Geocode: invalid components: ${address.invalid}`;
-        return order;
+      /**
+       * If the zip from the response does not match the order zip,
+       * retry Geocode API call using only the zip code.
+       */
+      if (foundZip && !correctAddressFound) {
+        return validateAddressAndGetOffset(order, order.postal_code);
       }
 
-      // Update the order with the cleansed and validated Google API data
-      order.validated_address = res.json.results[0].formatted_address;
-      order.geo_lat = res.json.results[0].geometry.location.lat;
-      order.geo_lng = res.json.results[0].geometry.location.lng;
-      order.address_1 = address.street_number
-        ? `${address.street_number} ${address.route}`
-        : order.address_1;
-      order.address_2 = address.subpremise || '';
-      order.postal_code = address.postal_code;
-      order.city = address.locality
-        || address.sublocality
-        || address.neighborhood
-        || address.administrative_area_level_3;
-      order.state = address.administrative_area_level_1;
-      order.country = address.country;
+      // Save the latitude and longitude
+      let geoLat = res.json.results[0].geometry.location.lat;
+      let geoLng = res.json.results[0].geometry.location.lng;
 
       // Call the Google timezone API to get the UTC offset
       try {
         let res = await googleMapsClient.timezone(
           {
-            location: [order.geo_lat, order.geo_lng],
+            location: [geoLat, geoLng],
             timestamp: Math.floor(new Date() / 1000),
           }
         ).asPromise();
 
+        // If response status is anything other than 'OK', set the error and skip execution
         if (res.json.status !== 'OK') {
           order.error = `Timezone: ${res.json.status}`;
           if (res.json.error_message) {
@@ -134,7 +125,7 @@ async function validateAddressAndGetOffset(order) {
           }
         } else {
 
-          // Calculate the offset and convert to a string
+          // Calculate the offset, converting from ms to hours
           let dstOffset = res.json.dstOffset;
           let rawOffset = res.json.rawOffset;
           let offset = (dstOffset + rawOffset) / 3600;
@@ -145,12 +136,11 @@ async function validateAddressAndGetOffset(order) {
             offset *= -1;
           }
 
+          // Build the offset string
           offset = offset < 10 ? `0${offset}:00` : `${offset}:00`;
           offset = negative ? `-${offset}` : offset;
 
           order.offset = offset;
-          delete order.geo_lat;
-          delete order.geo_lng;
         }
       } catch (e) {
         order.error = `Timezone: ${e}`;
@@ -194,32 +184,4 @@ async function createOrUpdateCsvs(csvName, validatedOrders, failedOrders) {
   } catch (e) {
     log(caller, e);
   }
-}
-
-/**
- * Validates all required address components are present in Google API response.
- * @param  {object} address The address components from the API response.
- * @return {object}         The address object with optional 'invalid' property.
- */
-function validateAddressComponents(address) {
-  let invalid = '';
-  let requiredAddressComponents = ['route', 'postal_code', 'administrative_area_level_1', 'country'];
-
-  requiredAddressComponents.forEach(property => {
-    if (!address.hasOwnProperty(property)) {
-      invalid = [...invalid, property];
-    }
-  });
-
-  if (!address.locality && !address.sublocality && !address.neighborhood && !address.administrative_area_level_3) {
-    invalid = [...invalid, 'city'];
-  }
-
-  if (address.country !== 'US') {
-    invalid = [...invalid, 'country'];
-  }
-
-  if (invalid) address.invalid = invalid.join(', ');
-
-  return address;
 }
