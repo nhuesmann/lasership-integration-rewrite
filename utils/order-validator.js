@@ -65,11 +65,8 @@ function validateOrder(order) {
   // Regex for removing whitespace
   let trimWhiteSpace = /^[ \t]+|[ \t]+$/g;
 
-  // Regex for removing commas and periods
-  let findCommasAndPeriods = /[,.]/g
-
   // Remove commas and periods
-  order.address_1 = order.address_1.replace(findCommasAndPeriods, '');
+  order.address_1 = order.address_1.replace(/[,.]/g, '');
 
   // Check if address_1 contains address_2 components
   let addrTwoComponentsToRemove = /\s((apartment|apt|suite|ste|unit)\s|#).*/gi;
@@ -83,8 +80,11 @@ function validateOrder(order) {
       : textToRemove[0].replace(trimWhiteSpace, '');
   }
 
+  // Remove commas, periods, and the hash symbol
+  order.address_2 = order.address_2.replace(/[,.#]/g, '');
+
   // Valid strings for address_2
-  let validAddrTwoComponents = /^((apartment|apt|suite|ste|unit)\s|#)\w{1,5}/gi;
+  let validAddrTwoComponents = /^(((apartment|apt|suite|ste|unit)\s\w{1,5})|\d+\w{0,4})/gi;
 
   // Find if address_2 is valid
   let validAddressTwo = order.address_2.match(validAddrTwoComponents);
